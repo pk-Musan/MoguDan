@@ -151,7 +151,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DangeonDivision.cpp" />
+    <ClCompile Include="DangeonGenerator.cpp" />
+    <ClCompile Include="DangeonRectangle.cpp" />
+    <ClCompile Include="Layer2D.cpp" />
     <ClCompile Include="Main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DangeonDivision.h" />
+    <ClInclude Include="DangeonGenerator.h" />
+    <ClInclude Include="DangeonRectangle.h" />
+    <ClInclude Include="Layer2D.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
