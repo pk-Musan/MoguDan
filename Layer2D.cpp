@@ -2,7 +2,7 @@
 #include "DxLib.h"
 
 // createLayer() を使ってdataを初期化
-Layer2D::Layer2D( int width, int height ) {
+Layer2D::Layer2D( int width, int height ) : width(0), height(0), data(0) {
 	if ( width > 0 && height > 0 ) {
 		createLayer( width, height );
 	}
@@ -53,6 +53,7 @@ void Layer2D::fillRect( int x, int y, int w, int h, int val ) {
 	}
 }
 
+// ある層のマップデータ確認用
 void Layer2D::Dump() {
 	for ( int y = 0; y < height; y++ ) {
 		for ( int x = 0; x < width; x++ ) {

@@ -5,7 +5,7 @@ class Layer2D {
 private:
 	int width; // ‚ ‚éŠK‘w‚Ì•
 	int height; // ‚ ‚éŠK‘w‚Ì‚‚³
-	int* data = 0; // ‚ ‚éŠK‘w‚Ìƒf[ƒ^
+	int* data; // ‚ ‚éŠK‘w‚Ìƒf[ƒ^
 
 public:
 	Layer2D( int width = 0, int height = 0 );
