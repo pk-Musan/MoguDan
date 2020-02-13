@@ -3,6 +3,7 @@
 //#include "DangeonRectangle.h"
 
 class DangeonDivision {
+public:
 	class DangeonRectangle {
 
 	public:

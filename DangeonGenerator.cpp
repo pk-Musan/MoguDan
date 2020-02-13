@@ -20,15 +20,19 @@ DangeonGenerator::~DangeonGenerator() {
 
 bool DangeonGenerator::checkDivisionSize( int size ) {
 	// 2部屋分の余裕があるか
-	if ( size < ( MIN_ROOM_SIZE + OUTER_MERGIN * 2 ) * 2 ) return true;
+	if ( size < ( MIN_ROOM_SIZE + OUTER_MERGIN ) * 2 + OUTER_MERGIN / 2 * 3 ) return true;
 	return false;
 }
 
 void DangeonGenerator::generate() {
+	//printfDx( "width = %d\nheight = %d\n", width, height );
 	layer = new Layer2D( width, height );
 
-	layer->fill( 0 ); // 指定サイズで初期化したlayerを壁で埋める
+	layer->fill( 2 ); // 指定サイズで初期化したlayerを壁で埋める
 	//layer->Dump();
+
+	divisions.clear();
+	roomNum = 0;
 
 	createDivision( 0, 0, width - 1, height - 1 ); // 最初の親区画を生成
 	roomNum += 1;
@@ -36,6 +40,10 @@ void DangeonGenerator::generate() {
 	srand( ( unsigned int )time( nullptr ) ); // 区画をさらに分割するかどうかの判断に乱数を用いるので初期化
 
 	splitDivison( true );
+
+	createRoom();
+
+	layer->Dump();
 }
 
 // 指定範囲で区画を生成し，divisionsに追加
@@ -77,7 +85,10 @@ void DangeonGenerator::splitDivison( bool vertical ) {
 	}
 
 	// 部屋が2部屋以上あり，確率的な条件を満たさない場合これ以上分割しない
-	if ( roomNum >= MIN_ROOM_NUM && ( rand() % 100 + 1 ) <= ( int )( ( float )roomNum / MAX_ROOM_NUM ) * 100 ) {
+	int per = rand() % 100 + 1;
+	int room_per = ( int )( ( float )roomNum / MAX_ROOM_NUM * 100 );
+	//printfDx( "per = %d, room_per = %d\n", per, room_per );
+	if ( roomNum >= MIN_ROOM_NUM && per <= room_per ) {
 		divisions.push_back( parentDiv );
 		return;
 	}
@@ -93,14 +104,23 @@ void DangeonGenerator::splitDivison( bool vertical ) {
 	/* 
 		分割した際に最低限の部屋の広さ(MIN_ROOM_SIZE)と通路幅(OUTER_MERGIN)は確保しておきたいため，
 		分割点pを求めるために用いるa, bは上記の2つの値をあらかじめ考慮しておく
+		※OUTER_MERGINに3/2をかけているのは，隣接する部屋同士の隙間は3ブロック分で十分なため
+		（2ブロック分しかないと通路生成の際に部屋から境界線まで1ブロック分でたどり着いてしまい，境界線上に沿って通路を伸ばす際に
+		部屋をえぐり取ってしまうから。4ブロック分だと最も近い部屋でも到達するのに4ブロック分かかってしまうので遠く感じる）
+
+		下記のような幅を分割するときは6を親と子の境界線とする
+		こうすれば左側の区画で部屋を作るときは(0, 1)をマージン，(2, 4)を部屋，(5, 6)をマージンとすることができる
+		右側なら(6, 7)をマージン，(8, 10)を部屋，(11, 12)をマージン
+		0 1 2 3 4 5 6 7 8 9 10 11 12
+		            6
 	*/
 	int a, b;
 	if ( vertical ) {
-		a = parentDiv->outer->top + ( MIN_ROOM_SIZE + OUTER_MERGIN );
-		b = parentDiv->outer->bottom - ( MIN_ROOM_SIZE + OUTER_MERGIN );
+		a = parentDiv->outer->top + ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
+		b = parentDiv->outer->bottom - ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
 	} else {
-		a = parentDiv->outer->left + ( MIN_ROOM_SIZE + OUTER_MERGIN );
-		b = parentDiv->outer->right - ( MIN_ROOM_SIZE + OUTER_MERGIN );
+		a = parentDiv->outer->left + ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
+		b = parentDiv->outer->right - ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
 	}
 	int ab = b - a; // a, b間の距離
 	int p = a + rand() % ( ab + 1 );
@@ -133,5 +153,39 @@ void DangeonGenerator::splitDivison( bool vertical ) {
 	3. 確定した部屋の範囲を通路で埋める
 */
 void DangeonGenerator::createRoom() {
+	for ( DangeonDivision* div : divisions ) {
+		int max_room_width = div->outer->getWidth() - OUTER_MERGIN * 2; // 部屋の幅の最大値
+		int max_room_height = div->outer->getHeight() - OUTER_MERGIN * 2; // 部屋の高さの最大値
 
+		int room_width = rand() % ( max_room_width - MIN_ROOM_SIZE + 1 ) + MIN_ROOM_SIZE; // 部屋の幅
+		int room_height = rand() % ( max_room_height - MIN_ROOM_SIZE + 1 ) + MIN_ROOM_SIZE; // 部屋の高さ
+
+		/*
+			親と子が6を境界線として下記のように分割されていた時，
+			左側の区画では(0, 1)をマージン，(2, 4)を部屋，(5, 6)をマージンとしたいので
+			以下のように基準点(room_x, room_y)を求める
+			0 1 2 3 4 5 6 7 8 9 10 11 12
+			            6
+		*/
+		int room_x = rand() % ( div->outer->getWidth() - OUTER_MERGIN *2 - room_width + 1 ) + OUTER_MERGIN; // 部屋のx座標（左上）
+		int room_y = rand() % ( div->outer->getHeight() - OUTER_MERGIN *2 - room_height + 1 ) + OUTER_MERGIN; // 部屋のy座標（左上）
+
+		int left = div->outer->left + room_x;
+		int top = div->outer->top + room_y;
+		int right = left + room_width - 1;
+		int bottom = top + room_height - 1;
+		// 0 1 2 3
+		// 0 1 2 3 4 5 6 7 8
+		// 1 2 3 4 5 6 7 8 9
+		//   2 3 4 5
+		div->inner->set( left, top, right, bottom );
+
+		layer->fillRectLRTB( div->outer->left, div->outer->top, div->outer->right, div->outer->bottom, 2 );
+		layer->fillRectLRTB( div->outer->left+1, div->outer->top+1, div->outer->right-1, div->outer->bottom-1, 1 );
+		fillRoom( div->inner );
+	}
+}
+
+void DangeonGenerator::fillRoom( DangeonDivision::DangeonRectangle* inner ) {
+	layer->fillRectLRTB( inner->left, inner->top, inner->right, inner->bottom, 0 );
 }

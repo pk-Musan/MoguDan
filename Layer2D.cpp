@@ -8,6 +8,11 @@ Layer2D::Layer2D( int width, int height ) : width(0), height(0), data(0) {
 	}
 }
 
+Layer2D::~Layer2D() {
+	delete[] data;
+	data = 0;
+}
+
 /*
 int& Layer2D::operator()( int y, int x ) {
 	return data[y * width + x];
@@ -51,6 +56,10 @@ void Layer2D::fillRect( int x, int y, int w, int h, int val ) {
 			data[Y * width + X] = val;
 		}
 	}
+}
+
+void Layer2D::fillRectLRTB( int left, int top, int right, int bottom, int val ) {
+	fillRect( left, top, right - left + 1, bottom - top + 1, val );
 }
 
 // ある層のマップデータ確認用

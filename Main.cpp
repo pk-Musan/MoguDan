@@ -17,7 +17,7 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	SetWaitVSyncFlag( FALSE );
 
 	frameStartTime = GetNowCount();
-	DangeonGenerator dg( 5, 6 );
+	DangeonGenerator dg( 30, 25 );
 	dg.generate();
 
 	while ( ScreenFlip() == 0 && ProcessMessage() == 0 && ClearDrawScreen() == 0 && KeyBoard::updateKey() == 0 ) { // 画面更新 & メッセージ処理 & 画面消去
@@ -26,6 +26,10 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		frameStartTime = GetNowCount();
 
 		if ( KeyBoard::key[KEY_INPUT_Q] == 1 ) break;
+		if ( KeyBoard::key[KEY_INPUT_SPACE] == 1 ) {
+			clsDx();
+			dg.generate();
+		}
 	}
 
 	WaitKey();
