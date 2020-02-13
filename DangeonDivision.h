@@ -5,7 +5,7 @@
 class DangeonDivision {
 	class DangeonRectangle {
 
-	private:
+	public:
 		int left; // 区画の左端
 		int top; // 区画の上端
 		int right; // 区画の右端
