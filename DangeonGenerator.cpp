@@ -28,13 +28,13 @@ void DangeonGenerator::generate() {
 	//printfDx( "width = %d\nheight = %d\n", width, height );
 	layer = new Layer2D( width, height );
 
-	layer->fill( 2 ); // 指定サイズで初期化したlayerを壁で埋める
+	layer->fill( 1 ); // 指定サイズで初期化したlayerを壁で埋める
 	//layer->Dump();
 
 	divisions.clear();
 	roomNum = 0;
 
-	createDivision( 0, 0, width - 1, height - 1 ); // 最初の親区画を生成
+	createDivision( 1, 1, width - 2, height - 2 ); // 最初の親区画を生成
 	roomNum += 1;
 
 	srand( ( unsigned int )time( nullptr ) ); // 区画をさらに分割するかどうかの判断に乱数を用いるので初期化

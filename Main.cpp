@@ -32,8 +32,6 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		}
 	}
 
-	WaitKey();
-
 	DxLib_End();
 
 	return 0;
