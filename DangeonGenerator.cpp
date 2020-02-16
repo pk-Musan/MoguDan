@@ -43,13 +43,16 @@ void DangeonGenerator::generate() {
 
 	createRoom();
 
+	createRoute();
+
 	layer->Dump();
+	printfDx( "room = %d\n", roomNum );
 }
 
 // 指定範囲で区画を生成し，divisionsに追加
 void DangeonGenerator::createDivision( int left, int top, int right, int bottom ) {
-	DangeonDivision* division = new DangeonDivision();
-	division->outer->set( left, top, right, bottom );
+	DangeonDivision division;// = new DangeonDivision();
+	division.outer.set( left, top, right, bottom );
 	divisions.push_back( division );
 }
 
@@ -61,7 +64,7 @@ void DangeonGenerator::createDivision( int left, int top, int right, int bottom 
 */
 void DangeonGenerator::splitDivison( bool vertical ) {
 	// divisionsの末尾から親となる要素を取り出す
-	DangeonDivision* parentDiv = divisions.back();//divisions[(int)divisions.size()];
+	DangeonDivision parentDiv = divisions.back();//divisions[(int)divisions.size()];
 	divisions.pop_back();
 
 	//printfDx( "%d\n", parentDiv->outer->getWidth() );
@@ -73,12 +76,12 @@ void DangeonGenerator::splitDivison( bool vertical ) {
 	*/
 	// 分割方向(vertical)に応じて分割可能かチェック
 	if ( vertical ) {
-		if ( checkDivisionSize( parentDiv->outer->getHeight() ) ) {
+		if ( checkDivisionSize( parentDiv.outer.getHeight() ) ) {
 			divisions.push_back( parentDiv );
 			return;
 		}
 	} else {
-		if ( checkDivisionSize( parentDiv->outer->getWidth() ) ) {
+		if ( checkDivisionSize( parentDiv.outer.getWidth() ) ) {
 			divisions.push_back( parentDiv );
 			return;
 		}
@@ -116,26 +119,26 @@ void DangeonGenerator::splitDivison( bool vertical ) {
 	*/
 	int a, b;
 	if ( vertical ) {
-		a = parentDiv->outer->top + ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
-		b = parentDiv->outer->bottom - ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
+		a = parentDiv.outer.top + ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
+		b = parentDiv.outer.bottom - ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
 	} else {
-		a = parentDiv->outer->left + ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
-		b = parentDiv->outer->right - ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
+		a = parentDiv.outer.left + ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
+		b = parentDiv.outer.right - ( MIN_ROOM_SIZE + OUTER_MERGIN / 2 * 3 );
 	}
 	int ab = b - a; // a, b間の距離
-	int p = a + rand() % ( ab + 1 );
+	int p = a + rand() % ( ab + 1 ); // 分割点
 
 	/* 
 		子の区画を生成
 		分割方向に応じて親の区画を縮める
 	*/
-	DangeonDivision* childDiv = new DangeonDivision();
+	DangeonDivision childDiv;// = new DangeonDivision();
 	if ( vertical ) {
-		childDiv->outer->set( parentDiv->outer->left, p, parentDiv->outer->right, parentDiv->outer->bottom );
-		parentDiv->outer->bottom = p;
+		childDiv.outer.set( parentDiv.outer.left, p, parentDiv.outer.right, parentDiv.outer.bottom );
+		parentDiv.outer.bottom = p;
 	} else {
-		childDiv->outer->set( p, parentDiv->outer->top, parentDiv->outer->right, parentDiv->outer->bottom );
-		parentDiv->outer->right = p;
+		childDiv.outer.set( p, parentDiv.outer.top, parentDiv.outer.right, parentDiv.outer.bottom );
+		parentDiv.outer.right = p;
 	}
 	roomNum += 1;
 
@@ -153,9 +156,9 @@ void DangeonGenerator::splitDivison( bool vertical ) {
 	3. 確定した部屋の範囲を通路で埋める
 */
 void DangeonGenerator::createRoom() {
-	for ( DangeonDivision* div : divisions ) {
-		int max_room_width = div->outer->getWidth() - OUTER_MERGIN * 2; // 部屋の幅の最大値
-		int max_room_height = div->outer->getHeight() - OUTER_MERGIN * 2; // 部屋の高さの最大値
+	for ( DangeonDivision &div : divisions ) {
+		int max_room_width = div.outer.getWidth() - OUTER_MERGIN * 2; // 部屋の幅の最大値
+		int max_room_height = div.outer.getHeight() - OUTER_MERGIN * 2; // 部屋の高さの最大値
 
 		int room_width = rand() % ( max_room_width - MIN_ROOM_SIZE + 1 ) + MIN_ROOM_SIZE; // 部屋の幅
 		int room_height = rand() % ( max_room_height - MIN_ROOM_SIZE + 1 ) + MIN_ROOM_SIZE; // 部屋の高さ
@@ -167,25 +170,53 @@ void DangeonGenerator::createRoom() {
 			0 1 2 3 4 5 6 7 8 9 10 11 12
 			            6
 		*/
-		int room_x = rand() % ( div->outer->getWidth() - OUTER_MERGIN *2 - room_width + 1 ) + OUTER_MERGIN; // 部屋のx座標（左上）
-		int room_y = rand() % ( div->outer->getHeight() - OUTER_MERGIN *2 - room_height + 1 ) + OUTER_MERGIN; // 部屋のy座標（左上）
+		int room_x = rand() % ( div.outer.getWidth() - OUTER_MERGIN *2 - room_width + 1 ) + OUTER_MERGIN; // 部屋のx座標（左上）
+		int room_y = rand() % ( div.outer.getHeight() - OUTER_MERGIN *2 - room_height + 1 ) + OUTER_MERGIN; // 部屋のy座標（左上）
 
-		int left = div->outer->left + room_x;
-		int top = div->outer->top + room_y;
+		int left = div.outer.left + room_x;
+		int top = div.outer.top + room_y;
 		int right = left + room_width - 1;
 		int bottom = top + room_height - 1;
 		// 0 1 2 3
 		// 0 1 2 3 4 5 6 7 8
 		// 1 2 3 4 5 6 7 8 9
 		//   2 3 4 5
-		div->inner->set( left, top, right, bottom );
+		div.inner.set( left, top, right, bottom );
 
-		layer->fillRectLRTB( div->outer->left, div->outer->top, div->outer->right, div->outer->bottom, 2 );
-		layer->fillRectLRTB( div->outer->left+1, div->outer->top+1, div->outer->right-1, div->outer->bottom-1, 1 );
-		fillRoom( div->inner );
+		layer->fillRectLTRB( div.outer.left, div.outer.top, div.outer.right, div.outer.bottom, 2 );
+		layer->fillRectLTRB( div.outer.left+1, div.outer.top+1, div.outer.right-1, div.outer.bottom-1, 1 );
+		fillRoom( div.inner );
 	}
 }
 
-void DangeonGenerator::fillRoom( DangeonDivision::DangeonRectangle* inner ) {
-	layer->fillRectLRTB( inner->left, inner->top, inner->right, inner->bottom, 0 );
+void DangeonGenerator::fillRoom( DangeonDivision::DangeonRectangle inner ) {
+	layer->fillRectLTRB( inner.left, inner.top, inner.right, inner.bottom, 0 );
+}
+
+void DangeonGenerator::createRoute() {
+	// 部屋から外側の区画まで通路を延ばす
+	for ( DangeonDivision &div : divisions ) {
+		// 部屋から通路を出す場所を決める（4方向分）
+		int inner_left = div.inner.left;
+		int inner_top = div.inner.top;
+		int inner_right = div.inner.right;
+		int inner_bottom = div.inner.bottom;
+
+		int outer_left = div.outer.left;
+		int outer_top = div.outer.top;
+		int outer_right = div.outer.right;
+		int outer_bottom = div.outer.bottom;
+
+		int left_y = rand() % ( inner_bottom - inner_top + 1 ) + inner_top; // 部屋の左側から出る通路のy座標
+		int top_x = rand() % ( inner_right - inner_left + 1 ) + inner_left; // 部屋の上側から出る通路のx座標
+		int right_y = rand() % ( inner_bottom - inner_top + 1 ) + inner_top; // 部屋の右側から出る通路のy座標
+		int bottom_x = rand() % ( inner_right - inner_left + 1 ) + inner_left; // 部屋の下側から出る通路のx座標
+
+		layer->fillRectLTRB( outer_left, left_y, inner_left - 1, left_y, 0 );
+		layer->fillRectLTRB( top_x, outer_top, top_x, inner_top - 1, 0 );
+		layer->fillRectLTRB( inner_right + 1, right_y, outer_right, right_y, 0 );
+		layer->fillRectLTRB( bottom_x, inner_bottom + 1, bottom_x, outer_bottom, 0 );
+	}
+
+	// 各部屋から延ばされた通路をつなぐ
 }

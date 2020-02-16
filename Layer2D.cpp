@@ -13,7 +13,6 @@ Layer2D::~Layer2D() {
 	data = 0;
 }
 
-/*
 int& Layer2D::operator()( int y, int x ) {
 	return data[y * width + x];
 }
@@ -21,7 +20,6 @@ int& Layer2D::operator()( int y, int x ) {
 const int& Layer2D::operator()( int y, int x ) const {
 	return data[y * width + x];
 }
-*/
 
 // data‚ğwidth * height•ª‚ÌintŒ^”z—ñ‚Æ‚µ‚Ä‰Šú‰»
 void Layer2D::createLayer( int width, int height ) {
@@ -58,7 +56,7 @@ void Layer2D::fillRect( int x, int y, int w, int h, int val ) {
 	}
 }
 
-void Layer2D::fillRectLRTB( int left, int top, int right, int bottom, int val ) {
+void Layer2D::fillRectLTRB( int left, int top, int right, int bottom, int val ) {
 	fillRect( left, top, right - left + 1, bottom - top + 1, val );
 }
 

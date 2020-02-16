@@ -13,14 +13,15 @@ public:
 		int bottom; // 区画の下端
 
 	public:
+		DangeonRectangle();
 		void set( int left, int top, int right, int bottom );
 		int getWidth() { return right - left + 1; }
 		int getHeight() { return bottom - top + 1; }
 	};
 
 public:
-	DangeonRectangle* outer; // 区画の外側
-	DangeonRectangle* inner; // 区画の内側（部屋の矩形）
+	DangeonRectangle outer; // 区画の外側
+	DangeonRectangle inner; // 区画の内側（部屋の矩形）
 
 public:
 	DangeonDivision();
