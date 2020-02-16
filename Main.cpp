@@ -7,7 +7,7 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	ChangeWindowMode( TRUE );
 
-	SetGraphMode( 640, 480, 32 );
+	SetGraphMode( 640, 880, 32 );
 
 	if ( DxLib_Init() == -1 ) {
 		return -1;
@@ -17,7 +17,7 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	SetWaitVSyncFlag( FALSE );
 
 	frameStartTime = GetNowCount();
-	DangeonGenerator dg( 30, 25 );
+	DangeonGenerator dg( 50, 50 );
 	dg.generate();
 
 	while ( ScreenFlip() == 0 && ProcessMessage() == 0 && ClearDrawScreen() == 0 && KeyBoard::updateKey() == 0 ) { // 画面更新 & メッセージ処理 & 画面消去

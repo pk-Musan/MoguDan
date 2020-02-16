@@ -2,14 +2,15 @@
 #include "DxLib.h"
 
 #include <time.h>
+#include <vector>
 
 DangeonGenerator::DangeonGenerator( int width, int height ) : width(width), height(height), roomNum(0), layer(0) {
 	//layer = new Layer2D( width, height );
 }
 
 DangeonGenerator::~DangeonGenerator() {
-	delete layer;
-	layer = 0;
+	//delete layer;
+	//layer = 0;
 	/*
 	for ( DangeonDivision* division : divisions ) {
 		delete division;
@@ -26,9 +27,9 @@ bool DangeonGenerator::checkDivisionSize( int size ) {
 
 void DangeonGenerator::generate() {
 	//printfDx( "width = %d\nheight = %d\n", width, height );
-	layer = new Layer2D( width, height );
+	layer.createLayer( width, height );
 
-	layer->fill( 1 ); // 指定サイズで初期化したlayerを壁で埋める
+	layer.fill( 1 ); // 指定サイズで初期化したlayerを壁で埋める
 	//layer->Dump();
 
 	divisions.clear();
@@ -45,7 +46,7 @@ void DangeonGenerator::generate() {
 
 	createRoute();
 
-	layer->Dump();
+	layer.Dump();
 	printfDx( "room = %d\n", roomNum );
 }
 
@@ -183,14 +184,14 @@ void DangeonGenerator::createRoom() {
 		//   2 3 4 5
 		div.inner.set( left, top, right, bottom );
 
-		layer->fillRectLTRB( div.outer.left, div.outer.top, div.outer.right, div.outer.bottom, 2 );
-		layer->fillRectLTRB( div.outer.left+1, div.outer.top+1, div.outer.right-1, div.outer.bottom-1, 1 );
+		//layer.fillRectLTRB( div.outer.left, div.outer.top, div.outer.right, div.outer.bottom, 2 );
+		//layer.fillRectLTRB( div.outer.left+1, div.outer.top+1, div.outer.right-1, div.outer.bottom-1, 1 );
 		fillRoom( div.inner );
 	}
 }
 
 void DangeonGenerator::fillRoom( DangeonDivision::DangeonRectangle inner ) {
-	layer->fillRectLTRB( inner.left, inner.top, inner.right, inner.bottom, 0 );
+	layer.fillRectLTRB( inner.left, inner.top, inner.right, inner.bottom, 0 );
 }
 
 void DangeonGenerator::createRoute() {
@@ -212,11 +213,60 @@ void DangeonGenerator::createRoute() {
 		int right_y = rand() % ( inner_bottom - inner_top + 1 ) + inner_top; // 部屋の右側から出る通路のy座標
 		int bottom_x = rand() % ( inner_right - inner_left + 1 ) + inner_left; // 部屋の下側から出る通路のx座標
 
-		layer->fillRectLTRB( outer_left, left_y, inner_left - 1, left_y, 0 );
-		layer->fillRectLTRB( top_x, outer_top, top_x, inner_top - 1, 0 );
-		layer->fillRectLTRB( inner_right + 1, right_y, outer_right, right_y, 0 );
-		layer->fillRectLTRB( bottom_x, inner_bottom + 1, bottom_x, outer_bottom, 0 );
+		layer.fillRectLTRB( outer_left, left_y, inner_left - 1, left_y, 0 );
+		layer.fillRectLTRB( top_x, outer_top, top_x, inner_top - 1, 0 );
+		layer.fillRectLTRB( inner_right + 1, right_y, outer_right, right_y, 0 );
+		layer.fillRectLTRB( bottom_x, inner_bottom + 1, bottom_x, outer_bottom, 0 );
 	}
 
 	// 各部屋から延ばされた通路をつなぐ
+	for ( DangeonDivision& div : divisions ) {
+		int y, x;
+		std::vector<int> route_knots;
+
+		// 区画の左側
+		x = div.outer.left;
+		for ( y = div.outer.top; y <= div.outer.bottom; y++ ) {
+			if ( layer( y, x ) == 0 ) route_knots.push_back( y );
+		}
+		if ( route_knots.size() > 1 ) layer.fillRectLTRB( x, route_knots.front(), x, route_knots.back(), 0 );
+		else if ( route_knots.size() == 1 ) {
+			if ( layer( route_knots.front(), x - 1 ) != 0 ) layer.fillRectLTRB( x, route_knots.front(), div.inner.left - 1, route_knots.front(), 1 );
+		}
+		route_knots.clear();
+
+		
+		// 区画の上側
+		y = div.outer.top;
+		for ( x = div.outer.left; x <= div.outer.right; x++ ) {
+			if ( layer( y, x ) == 0 ) route_knots.push_back( x );
+		}
+		if ( route_knots.size() > 1 ) layer.fillRectLTRB( route_knots.front(), y, route_knots.back(), y, 0 );
+		else if ( route_knots.size() == 1 ) {
+			if ( layer( y - 1, route_knots.front() ) != 0 ) layer.fillRectLTRB( route_knots.front(), y, route_knots.front(), div.inner.top - 1, 1 );
+		}
+		route_knots.clear();
+
+		// 区画の右側
+		x = div.outer.right;
+		for ( y = div.outer.top; y <= div.outer.bottom; y++ ) {
+			if ( layer( y, x ) == 0 ) route_knots.push_back( y );
+		}
+		if ( route_knots.size() > 1 ) layer.fillRectLTRB( x, route_knots.front(), x, route_knots.back(), 0 );
+		else if ( route_knots.size() == 1 ) {
+			if ( layer( route_knots.front(), x + 1 ) != 0 ) layer.fillRectLTRB( div.inner.right + 1, route_knots.front(), x, route_knots.front(), 1 );
+		}
+		route_knots.clear();
+
+		// 区画の下側
+		y = div.outer.bottom;
+		for ( x = div.outer.left; x <= div.outer.right; x++ ) {
+			if ( layer( y, x ) == 0 ) route_knots.push_back( x );
+		}
+		if ( route_knots.size() > 1 ) layer.fillRectLTRB( route_knots.front(), y, route_knots.back(), y, 0 );
+		else if ( route_knots.size() == 1 ) {
+			if ( layer( y + 1, route_knots.front() ) != 0 ) layer.fillRectLTRB( route_knots.front(), div.inner.bottom + 1, route_knots.front(), y, 1 );
+		}
+		route_knots.clear();
+	}
 }
