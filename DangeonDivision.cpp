@@ -29,3 +29,8 @@ DangeonDivision::~DangeonDivision() {
 	inner = 0;
 	*/
 }
+/*
+bool DangeonDivision::operator<( const DangeonDivision& anotherDiv ) const {
+	return this->calcOuterArea() > anotherDiv.calcOuterArea();
+}
+*/

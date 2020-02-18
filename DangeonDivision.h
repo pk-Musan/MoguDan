@@ -15,8 +15,8 @@ public:
 	public:
 		DangeonRectangle();
 		void set( int left, int top, int right, int bottom );
-		int getWidth() { return right - left + 1; }
-		int getHeight() { return bottom - top + 1; }
+		int getWidth() const { return right - left + 1; }
+		int getHeight() const { return bottom - top + 1; }
 	};
 
 public:
@@ -26,4 +26,8 @@ public:
 public:
 	DangeonDivision();
 	~DangeonDivision();
+	//int calcOuterArea() const { return outer.getHeight() * outer.getWidth(); }
+	//int calcInnerArea() const { return inner.getHeight() * inner.getWidth(); }
+	
+	//bool operator<( const DangeonDivision& anotherDiv ) const;
 };

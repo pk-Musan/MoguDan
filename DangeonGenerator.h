@@ -30,6 +30,8 @@ public:
 	void createDivision( int left, int top, int right, int bottom );
 	void splitDivison( bool vertical );
 	void createRoom();
-	void fillRoom( DangeonDivision::DangeonRectangle room );
+	void fillRoom( DangeonDivision::DangeonRectangle inner );
+	void sortDivisionByArea();
 	void createRoute();
+	void connectRoute();
 };

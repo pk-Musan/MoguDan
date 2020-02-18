@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include <vector>
+#include <algorithm>
 
 DangeonGenerator::DangeonGenerator( int width, int height ) : width(width), height(height), roomNum(0), layer(0) {
 	//layer = new Layer2D( width, height );
@@ -44,10 +45,13 @@ void DangeonGenerator::generate() {
 
 	createRoom();
 
+	sortDivisionByArea();
+
 	createRoute();
 
 	layer.Dump();
 	printfDx( "room = %d\n", roomNum );
+	for ( DangeonDivision div : divisions ) printfDx( "%d ", div.inner.getHeight() * div.inner.getWidth() );
 }
 
 // 指定範囲で区画を生成し，divisionsに追加
@@ -150,6 +154,7 @@ void DangeonGenerator::splitDivison( bool vertical ) {
 	splitDivison( !vertical );
 }
 
+
 /*
 	各区画ごとに部屋を生成
 	1. 部屋の大きさをランダムに決める(OUTER_MERGINを考慮)
@@ -190,13 +195,34 @@ void DangeonGenerator::createRoom() {
 	}
 }
 
+
+/*
+	指定された区画を部屋として書き換える
+*/
 void DangeonGenerator::fillRoom( DangeonDivision::DangeonRectangle inner ) {
 	layer.fillRectLTRB( inner.left, inner.top, inner.right, inner.bottom, 0 );
 }
 
+
+/*
+	区画を面積の大きい順に並び変える
+	通路生成の際に大きい区画に対する通路が極端に少なくなるのを防ぐため
+*/
+void DangeonGenerator::sortDivisionByArea() {
+	//std::sort( divisions.begin(), divisions.end() );
+
+	divisions.sort( []( const DangeonDivision& divA, const DangeonDivision& divB ) {
+		return divA.inner.getWidth() * divA.inner.getHeight() > divB.inner.getWidth()* divB.inner.getHeight();
+					} );
+}
+
+
+/*
+	部屋同士を結ぶ通路を生成する
+*/
 void DangeonGenerator::createRoute() {
 	// 部屋から外側の区画まで通路を延ばす
-	for ( DangeonDivision &div : divisions ) {
+	for ( DangeonDivision& div : divisions ) {
 		// 部屋から通路を出す場所を決める（4方向分）
 		int inner_left = div.inner.left;
 		int inner_top = div.inner.top;
@@ -219,53 +245,233 @@ void DangeonGenerator::createRoute() {
 		layer.fillRectLTRB( bottom_x, inner_bottom + 1, bottom_x, outer_bottom, 0 );
 	}
 
+	connectRoute();
+}
+
+/*
+	通路同士を結ぶ
+*/
+void DangeonGenerator::connectRoute() {
 	// 各部屋から延ばされた通路をつなぐ
 	for ( DangeonDivision& div : divisions ) {
-		int y, x;
-		std::vector<int> route_knots;
+		int y, x; // 部屋から延ばされた通路が外側の区画のどこにあるか
+		std::vector<int> route_knots; // 同一区画内の一辺に存在する通路の数
 
-		// 区画の左側
+		/* 
+		##################
+		####区画の左側####
+		##################
+		*/
 		x = div.outer.left;
-		for ( y = div.outer.top; y <= div.outer.bottom; y++ ) {
-			if ( layer( y, x ) == 0 ) route_knots.push_back( y );
+		// 部屋の高さ以内の範囲で接続点を探す（自区画から出ている経路の突き当りも含む）
+		for ( y = div.inner.top; y <= div.inner.bottom; y++ ) {
+			if ( layer( y, x ) == 0 ) {
+				route_knots.push_back( y );
+			}
 		}
+
+		// 部屋の高さ以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
+		if ( route_knots.size() == 1 && layer( route_knots.front(), x - 1 ) != 0 ) {
+			// 部屋の範囲より上側をチェック
+			for ( y = div.inner.top - 1; y >= 0; y-- ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( y >= 2 ) {
+					if ( layer( y, x ) == 0 && layer( y - 1, x ) == 0 && layer( y - 2, x ) == 0 ) break;
+					if ( layer( y, x - 1 ) == 0 && layer( y - 1, x - 1 ) == 0 && layer( y - 2, x - 1 ) == 0 ) break;
+					if ( layer( y, x + 1 ) == 0 && layer( y - 1, x + 1 ) == 0 && layer( y - 2, x + 1 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.insert( route_knots.begin(), y );
+					break;
+				}
+			}
+			// 部屋の範囲より下側をチェック
+			for ( y = div.inner.bottom + 1; y < height; y++ ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( y < height - 2 ) {
+					if ( layer( y, x ) == 0 && layer( y + 1, x ) == 0 && layer( y + 2, x ) == 0 ) break;
+					if ( layer( y, x - 1 ) == 0 && layer( y + 1, x - 1 ) == 0 && layer( y + 2, x - 1 ) == 0 ) break;
+					if ( layer( y, x + 1 ) == 0 && layer( y + 1, x + 1 ) == 0 && layer( y + 2, x + 1 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.push_back( y );
+					break;
+				}
+			}
+		}
+
+		// 接続点が2つ以上あればそれらを通路として結ぶ
 		if ( route_knots.size() > 1 ) layer.fillRectLTRB( x, route_knots.front(), x, route_knots.back(), 0 );
+		// 接続点が1つしかないときは部屋までの通路を消す（周囲に空間が存在する場合を除く）
 		else if ( route_knots.size() == 1 ) {
-			if ( layer( route_knots.front(), x - 1 ) != 0 ) layer.fillRectLTRB( x, route_knots.front(), div.inner.left - 1, route_knots.front(), 1 );
+			int l = layer( route_knots.front(), x - 1 );
+			int u = layer( route_knots.front() - 1, x );
+			int d = layer( route_knots.front() + 1, x );
+			if ( l != 0 && u != 0 && d != 0 ) layer.fillRectLTRB( x, route_knots.front(), div.inner.left - 1, route_knots.front(), 1 );
 		}
 		route_knots.clear();
 
 		
-		// 区画の上側
+		/*
+		##################
+		####区画の上側####
+		##################
+		*/
 		y = div.outer.top;
-		for ( x = div.outer.left; x <= div.outer.right; x++ ) {
-			if ( layer( y, x ) == 0 ) route_knots.push_back( x );
+		// 部屋の幅以内の範囲で接続点を探す（自区画から出ている経路の突き当りも含む）
+		for ( x = div.inner.left; x <= div.inner.right; x++ ) {
+			if ( layer( y, x ) == 0 ) {
+				route_knots.push_back( x );
+			}
 		}
+
+		// 部屋の幅以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
+		if ( route_knots.size() == 1 && layer( y - 1, route_knots.front() ) != 0 ) {
+			// 部屋の範囲より左側をチェック
+			for ( x = div.inner.left - 1; x >= 0; x-- ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( x >= 2 ) {
+					if ( layer( y, x ) == 0 && layer( y, x - 1 ) == 0 && layer( y, x - 2 ) == 0 ) break;
+					if ( layer( y - 1, x ) == 0 && layer( y - 1, x - 1 ) == 0 && layer( y - 1, x - 2 ) == 0 ) break;
+					if ( layer( y + 1, x ) == 0 && layer( y + 1, x - 1 ) == 0 && layer( y + 1, x - 2 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.insert( route_knots.begin(), x );
+					break;
+				}
+			}
+			// 部屋の範囲より右側をチェック
+			for ( x = div.inner.right + 1; x < width; x++ ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( x < width - 2 ) {
+					if ( layer( y, x ) == 0 && layer( y, x + 1 ) == 0 && layer( y, x + 2 ) == 0 ) break;
+					if ( layer( y - 1, x ) == 0 && layer( y - 1, x + 1 ) == 0 && layer( y - 1, x + 2 ) == 0 ) break;
+					if ( layer( y + 1, x ) == 0 && layer( y + 1, x + 1 ) == 0 && layer( y + 1, x + 2 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.push_back( x );
+					break;
+				}
+			}
+		}
+
+		// 接続点が2つ以上あればそれらを通路として結ぶ
 		if ( route_knots.size() > 1 ) layer.fillRectLTRB( route_knots.front(), y, route_knots.back(), y, 0 );
+		// 接続点が1つしかないときは部屋までの通路を消す（周囲に空間が存在する場合を除く）
 		else if ( route_knots.size() == 1 ) {
-			if ( layer( y - 1, route_knots.front() ) != 0 ) layer.fillRectLTRB( route_knots.front(), y, route_knots.front(), div.inner.top - 1, 1 );
+			int l = layer( y, route_knots.front() - 1 );
+			int u = layer( y - 1, route_knots.front() );
+			int r = layer( y, route_knots.front() + 1 );
+			if ( l != 0 && u != 0 && r != 0 ) layer.fillRectLTRB( route_knots.front(), y, route_knots.front(), div.inner.top - 1, 1 );
 		}
 		route_knots.clear();
 
-		// 区画の右側
+
+		/* 
+		##################
+		####区画の右側####
+		##################
+		*/
 		x = div.outer.right;
-		for ( y = div.outer.top; y <= div.outer.bottom; y++ ) {
-			if ( layer( y, x ) == 0 ) route_knots.push_back( y );
+		// 部屋の高さ以内の範囲で接続点を探す（自区画から出ている経路の突き当りも含む）
+		for ( y = div.inner.top; y <= div.inner.bottom; y++ ) {
+			if ( layer( y, x ) == 0 ) {
+				route_knots.push_back( y );
+			}
 		}
+
+		// 部屋の高さ以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
+		if ( route_knots.size() == 1 && layer( route_knots.front(), x + 1 ) != 0 ) {
+			// 部屋の範囲より上側をチェック
+			for ( y = div.inner.top - 1; y >= 0; y-- ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( y >= 2 ) {
+					if ( layer( y, x ) == 0 && layer( y - 1, x ) == 0 && layer( y - 2, x ) == 0 ) break;
+					if ( layer( y, x - 1 ) == 0 && layer( y - 1, x - 1 ) == 0 && layer( y - 2, x - 1 ) == 0 ) break;
+					if ( layer( y, x + 1 ) == 0 && layer( y - 1, x + 1 ) == 0 && layer( y - 2, x + 1 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.insert( route_knots.begin(), y );
+					break;
+				}
+			}
+			// 部屋の範囲より下側をチェック
+			for ( y = div.inner.bottom + 1; y < width; y++ ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( y < height - 2 ) {
+					if ( layer( y, x ) == 0 && layer( y + 1, x ) == 0 && layer( y + 2, x ) == 0 ) break;
+					if ( layer( y, x - 1 ) == 0 && layer( y + 1, x - 1 ) == 0 && layer( y + 2, x - 1 ) == 0 ) break;
+					if ( layer( y, x + 1 ) == 0 && layer( y + 1, x + 1 ) == 0 && layer( y + 2, x + 1 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.push_back( y );
+					break;
+				}
+			}
+		}
+
+		// 接続点が2つ以上あればそれらを通路として結ぶ
 		if ( route_knots.size() > 1 ) layer.fillRectLTRB( x, route_knots.front(), x, route_knots.back(), 0 );
+		// 接続点が1つしかないときは部屋までの通路を消す（周囲に空間が存在する場合を除く）
 		else if ( route_knots.size() == 1 ) {
-			if ( layer( route_knots.front(), x + 1 ) != 0 ) layer.fillRectLTRB( div.inner.right + 1, route_knots.front(), x, route_knots.front(), 1 );
+			int u = layer( route_knots.front() - 1, x );
+			int r = layer( route_knots.front(), x + 1 );
+			int d = layer( route_knots.front() + 1, x );
+			if ( u != 0 && r != 0 && d != 0 ) layer.fillRectLTRB( div.inner.right + 1, route_knots.front(), x, route_knots.front(), 1 );
 		}
 		route_knots.clear();
 
-		// 区画の下側
+		/*
+		##################
+		####区画の下側####
+		##################
+		*/
 		y = div.outer.bottom;
-		for ( x = div.outer.left; x <= div.outer.right; x++ ) {
-			if ( layer( y, x ) == 0 ) route_knots.push_back( x );
+		// 部屋の幅以内の範囲で接続点を探す（自区画から出ている経路の突き当りも含む）
+		for ( x = div.inner.left; x <= div.inner.right; x++ ) {
+			if ( layer( y, x ) == 0 ) {
+				route_knots.push_back( x );
+			}
 		}
+
+		// 部屋の幅以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
+		if ( route_knots.size() == 1 && layer( y + 1, route_knots.front() ) != 0 ) {
+			// 部屋の範囲より左側をチェック
+			for ( x = div.inner.left - 1; x >= 0; x-- ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( x >= 2 ) {
+					if ( layer( y, x ) == 0 && layer( y, x - 1 ) == 0 && layer( y, x - 2 ) == 0 ) break;
+					if ( layer( y - 1, x ) == 0 && layer( y - 1, x - 1 ) == 0 && layer( y - 1, x - 2 ) == 0 ) break;
+					if ( layer( y + 1, x ) == 0 && layer( y + 1, x - 1 ) == 0 && layer( y + 1, x - 2 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.insert( route_knots.begin(), x );
+					break;
+				}
+			}
+			// 部屋の範囲より右側をチェック
+			for ( x = div.inner.right + 1; x < width; x++ ) {
+				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
+				if ( x < width - 2 ) {
+					if ( layer( y, x ) == 0 && layer( y, x + 1 ) == 0 && layer( y, x + 2 ) == 0 ) break;
+					if ( layer( y - 1, x ) == 0 && layer( y - 1, x + 1 ) == 0 && layer( y - 1, x + 2 ) == 0 ) break;
+					if ( layer( y + 1, x ) == 0 && layer( y + 1, x + 1 ) == 0 && layer( y + 1, x + 2 ) == 0 ) break;
+				}
+				if ( layer( y, x ) == 0 ) {
+					route_knots.push_back( x );
+					break;
+				}
+			}
+		}
+
+		// 接続点が2つ以上あればそれらを通路として結ぶ
 		if ( route_knots.size() > 1 ) layer.fillRectLTRB( route_knots.front(), y, route_knots.back(), y, 0 );
+		// 接続点が1つしかないときは部屋までの通路を消す（周囲に空間が存在する場合を除く）
 		else if ( route_knots.size() == 1 ) {
-			if ( layer( y + 1, route_knots.front() ) != 0 ) layer.fillRectLTRB( route_knots.front(), div.inner.bottom + 1, route_knots.front(), y, 1 );
+			int l = layer( y, route_knots.front() - 1 );
+			int r = layer( y, route_knots.front() + 1 );
+			int d = layer( y + 1, route_knots.front() );
+			if ( l != 0 && r != 0 && d != 0 ) layer.fillRectLTRB( route_knots.front(), div.inner.bottom + 1, route_knots.front(), y, 1 );
 		}
 		route_knots.clear();
 	}
