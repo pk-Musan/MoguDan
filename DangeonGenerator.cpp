@@ -36,7 +36,7 @@ void DangeonGenerator::generate() {
 	divisions.clear();
 	roomNum = 0;
 
-	createDivision( 1, 1, width - 2, height - 2 ); // 最初の親区画を生成
+	createDivision( 5, 5, width - 1 - 5, height - 1 - 5 ); // 最初の親区画を生成
 	roomNum += 1;
 
 	srand( ( unsigned int )time( nullptr ) ); // 区画をさらに分割するかどうかの判断に乱数を用いるので初期化
@@ -45,7 +45,7 @@ void DangeonGenerator::generate() {
 
 	createRoom();
 
-	sortDivisionByArea();
+	//sortDivisionByArea();
 
 	createRoute();
 
@@ -245,6 +245,8 @@ void DangeonGenerator::createRoute() {
 		layer.fillRectLTRB( bottom_x, inner_bottom + 1, bottom_x, outer_bottom, 0 );
 	}
 
+	sortDivisionByArea();
+
 	connectRoute();
 }
 
@@ -258,6 +260,23 @@ void DangeonGenerator::connectRoute() {
 		std::vector<int> route_knots; // 同一区画内の一辺に存在する通路の数
 
 		/* 
+			部屋数に応じて通路同士をつなぐ範囲を変更する
+			4部屋以下の場合，各区画では自身の区画(outer)内の範囲しかチェックしない
+		*/
+		int y_min, y_max, x_min, x_max;
+		if ( divisions.size() <= 4 ) {
+			y_min = div.outer.top;
+			y_max = div.outer.bottom + 1;
+			x_min = div.outer.left;
+			x_max = div.outer.right + 1;
+		} else {
+			y_min = 0;
+			y_max = height;
+			x_min = 0; 
+			x_max = width;
+		}
+
+		/*
 		##################
 		####区画の左側####
 		##################
@@ -273,7 +292,7 @@ void DangeonGenerator::connectRoute() {
 		// 部屋の高さ以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
 		if ( route_knots.size() == 1 && layer( route_knots.front(), x - 1 ) != 0 ) {
 			// 部屋の範囲より上側をチェック
-			for ( y = div.inner.top - 1; y >= 0; y-- ) {
+			for ( y = div.inner.top - 1; y >= y_min; y-- ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( y >= 2 ) {
 					if ( layer( y, x ) == 0 && layer( y - 1, x ) == 0 && layer( y - 2, x ) == 0 ) break;
@@ -285,8 +304,10 @@ void DangeonGenerator::connectRoute() {
 					break;
 				}
 			}
+		}
+		if ( route_knots.size() == 1 && layer( route_knots.front(), x - 1 ) != 0 ) {
 			// 部屋の範囲より下側をチェック
-			for ( y = div.inner.bottom + 1; y < height; y++ ) {
+			for ( y = div.inner.bottom + 1; y < y_max; y++ ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( y < height - 2 ) {
 					if ( layer( y, x ) == 0 && layer( y + 1, x ) == 0 && layer( y + 2, x ) == 0 ) break;
@@ -311,7 +332,7 @@ void DangeonGenerator::connectRoute() {
 		}
 		route_knots.clear();
 
-		
+
 		/*
 		##################
 		####区画の上側####
@@ -328,7 +349,7 @@ void DangeonGenerator::connectRoute() {
 		// 部屋の幅以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
 		if ( route_knots.size() == 1 && layer( y - 1, route_knots.front() ) != 0 ) {
 			// 部屋の範囲より左側をチェック
-			for ( x = div.inner.left - 1; x >= 0; x-- ) {
+			for ( x = div.inner.left - 1; x >= x_min; x-- ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( x >= 2 ) {
 					if ( layer( y, x ) == 0 && layer( y, x - 1 ) == 0 && layer( y, x - 2 ) == 0 ) break;
@@ -340,8 +361,10 @@ void DangeonGenerator::connectRoute() {
 					break;
 				}
 			}
+		}
+		if ( route_knots.size() == 1 && layer( y - 1, route_knots.front() ) != 0 ) {
 			// 部屋の範囲より右側をチェック
-			for ( x = div.inner.right + 1; x < width; x++ ) {
+			for ( x = div.inner.right + 1; x < x_max; x++ ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( x < width - 2 ) {
 					if ( layer( y, x ) == 0 && layer( y, x + 1 ) == 0 && layer( y, x + 2 ) == 0 ) break;
@@ -367,7 +390,7 @@ void DangeonGenerator::connectRoute() {
 		route_knots.clear();
 
 
-		/* 
+		/*
 		##################
 		####区画の右側####
 		##################
@@ -383,7 +406,7 @@ void DangeonGenerator::connectRoute() {
 		// 部屋の高さ以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
 		if ( route_knots.size() == 1 && layer( route_knots.front(), x + 1 ) != 0 ) {
 			// 部屋の範囲より上側をチェック
-			for ( y = div.inner.top - 1; y >= 0; y-- ) {
+			for ( y = div.inner.top - 1; y >= y_min; y-- ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( y >= 2 ) {
 					if ( layer( y, x ) == 0 && layer( y - 1, x ) == 0 && layer( y - 2, x ) == 0 ) break;
@@ -395,8 +418,10 @@ void DangeonGenerator::connectRoute() {
 					break;
 				}
 			}
+		}
+		if ( route_knots.size() == 1 && layer( route_knots.front(), x + 1 ) != 0 ) {
 			// 部屋の範囲より下側をチェック
-			for ( y = div.inner.bottom + 1; y < width; y++ ) {
+			for ( y = div.inner.bottom + 1; y < y_max; y++ ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( y < height - 2 ) {
 					if ( layer( y, x ) == 0 && layer( y + 1, x ) == 0 && layer( y + 2, x ) == 0 ) break;
@@ -437,7 +462,7 @@ void DangeonGenerator::connectRoute() {
 		// 部屋の幅以内の範囲に接続点がなかった場合（１つしかなくてもまっすぐに他の部屋とつながっている場合は除く）
 		if ( route_knots.size() == 1 && layer( y + 1, route_knots.front() ) != 0 ) {
 			// 部屋の範囲より左側をチェック
-			for ( x = div.inner.left - 1; x >= 0; x-- ) {
+			for ( x = div.inner.left - 1; x >= x_min; x-- ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( x >= 2 ) {
 					if ( layer( y, x ) == 0 && layer( y, x - 1 ) == 0 && layer( y, x - 2 ) == 0 ) break;
@@ -449,8 +474,10 @@ void DangeonGenerator::connectRoute() {
 					break;
 				}
 			}
+		}
+		if ( route_knots.size() == 1 && layer( y + 1, route_knots.front() ) != 0 ) {
 			// 部屋の範囲より右側をチェック
-			for ( x = div.inner.right + 1; x < width; x++ ) {
+			for ( x = div.inner.right + 1; x < x_max; x++ ) {
 				// 空間が3つ以上続いている場合は通路を延ばすと部屋を貫通してしまうのでbreak
 				if ( x < width - 2 ) {
 					if ( layer( y, x ) == 0 && layer( y, x + 1 ) == 0 && layer( y, x + 2 ) == 0 ) break;
