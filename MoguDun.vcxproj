@@ -157,6 +157,7 @@
     <ClCompile Include="KeyBoard.cpp" />
     <ClCompile Include="Layer2D.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DungeonDivision.h" />
@@ -164,6 +165,7 @@
     <ClInclude Include="DungeonManager.h" />
     <ClInclude Include="KeyBoard.h" />
     <ClInclude Include="Layer2D.h" />
+    <ClInclude Include="Player.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

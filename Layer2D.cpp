@@ -64,8 +64,9 @@ void Layer2D::fillRectLTRB( int left, int top, int right, int bottom, int val ) 
 void Layer2D::Dump() {
 	for ( int y = 0; y < height; y++ ) {
 		for ( int x = 0; x < width; x++ ) {
-			if ( data[y * width + x] == 0 )	printfDx( " " );
-			else if ( data[y * width + x] == 1 ) printfDx( "#" );
+			if ( data[y * width + x] == 0 )	printfDx( "@" );
+			else if ( data[y * width + x] == 1 ) printfDx( "”" );
+			else if ( data[y * width + x] == 2 ) printfDx( "" );
 		}
 		printfDx( "\n" );
 	}

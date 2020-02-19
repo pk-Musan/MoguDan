@@ -7,7 +7,7 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	ChangeWindowMode( TRUE );
 
-	SetGraphMode( 640, 880, 32 );
+	SetGraphMode( 960, 960, 32 );
 
 	if ( DxLib_Init() == -1 ) {
 		return -1;
