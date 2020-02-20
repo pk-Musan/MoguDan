@@ -1,10 +1,11 @@
 #pragma once
-
 #include "Layer2D.h"
 #include "DungeonDivision.h"
 
 #include <list>
 #include <vector>
+#include <time.h>
+#include <algorithm>
 
 class DungeonGenerator {
 
@@ -25,6 +26,11 @@ private:
 public:
 	DungeonGenerator( int width, int height );
 	~DungeonGenerator();
+
+	// DungeonGeneratorで生成したフロアデータをDungeonFloorManagerにわたす
+	Layer2D* getLayer() { return &layer; }
+	// DungeonGeneratorで生成したフロアの区画情報をDungeonFloorManagerにわたす
+	std::list<DungeonDivision*>* getDivisions() { return &divisions; }
 
 	bool checkDivisionSize( int size );
 

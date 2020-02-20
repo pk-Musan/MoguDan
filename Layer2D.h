@@ -1,5 +1,7 @@
 #pragma once
+#include "DxLib.h"
 
+//template <typename T>
 class Layer2D {
 
 private:
@@ -16,7 +18,13 @@ public:
 	int& operator()( int y, int x );// { return data[y * width + x]; }
 	const int& operator()( int y, int x ) const;// { return data[y * width + x]; }
 
-	void createLayer( int width, int height );
+	void createLayer( int width, int height );/*
+	{
+		this->width = width;
+		this->height = height;
+		data = new int[width * height];
+	}
+	*/
 	bool isOutOfRange( int y, int x );
 	void fill( int val );
 	void fillRect( int x, int y, int w, int h, int val );

@@ -1,5 +1,4 @@
 #include "Layer2D.h"
-#include "DxLib.h"
 
 // createLayer() ‚ðŽg‚Á‚Ädata‚ð‰Šú‰»
 Layer2D::Layer2D( int width, int height ) : width(0), height(0), data(0) {
@@ -9,8 +8,10 @@ Layer2D::Layer2D( int width, int height ) : width(0), height(0), data(0) {
 }
 
 Layer2D::~Layer2D() {
+	printfDx( "~Layer2D : start\n" );
 	delete[] data;
 	data = 0;
+	printfDx( "~Layer2D : end\n" );
 }
 
 int& Layer2D::operator()( int y, int x ) {
@@ -23,6 +24,9 @@ const int& Layer2D::operator()( int y, int x ) const {
 
 // data‚ðwidth * height•ª‚ÌintŒ^”z—ñ‚Æ‚µ‚Ä‰Šú‰»
 void Layer2D::createLayer( int width, int height ) {
+	delete data;
+	data = 0;
+
 	this->width = width;
 	this->height = height;
 	data = new int[width * height];

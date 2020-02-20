@@ -1,9 +1,10 @@
 #include "DxLib.h"
-#include "DungeonGenerator.h"
+#include "DungeonFloorManager.h"
 #include "KeyBoard.h"
 
 int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow ) {
-	int frameStartTime;
+	int loopStartTime;
+	int generateStartTime;
 
 	ChangeWindowMode( TRUE );
 
@@ -16,19 +17,40 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	SetDrawScreen( DX_SCREEN_BACK );
 	SetWaitVSyncFlag( FALSE );
 
-	frameStartTime = GetNowCount();
-	DungeonGenerator dg( 50, 50 );
-	dg.generate();
+	loopStartTime = GetNowCount();
+	DungeonFloorManager* dgfloorManager = new DungeonFloorManager( 50, 50 );
+	generateStartTime = GetNowCount();
+	dgfloorManager->generateFloor();
+	printfDx( "time = %d\n", GetNowCount() - generateStartTime );
 
 	while ( ScreenFlip() == 0 && ProcessMessage() == 0 && ClearDrawScreen() == 0 && KeyBoard::updateKey() == 0 ) { // 画面更新 & メッセージ処理 & 画面消去
-		while ( GetNowCount() - frameStartTime < 1000 / 60 ) {}
+		while ( GetNowCount() - loopStartTime < 1000 / 60 ) {}
 
-		frameStartTime = GetNowCount();
+		loopStartTime = GetNowCount();
 
-		if ( KeyBoard::key[KEY_INPUT_Q] == 1 ) break;
-		if ( KeyBoard::key[KEY_INPUT_SPACE] == 1 ) {
+		//if ( KeyBoard::key[KEY_INPUT_Q] == 1 ) break;
+		if ( KeyBoard::key[KEY_INPUT_Q] == 1 ) {
 			clsDx();
-			dg.generate();
+			delete dgfloorManager;
+			dgfloorManager = 0;
+		}
+		if ( KeyBoard::key[KEY_INPUT_ESCAPE] == 1 ) {
+			delete dgfloorManager;
+			dgfloorManager = 0;
+			break;
+		}
+		if ( KeyBoard::key[KEY_INPUT_SPACE] == 1 ) {
+			generateStartTime = GetNowCount();
+			if ( dgfloorManager == nullptr ) {
+				clsDx();
+				dgfloorManager = new DungeonFloorManager( 50, 50 );
+				dgfloorManager->generateFloor();
+				printfDx( "time = %d\n", GetNowCount() - generateStartTime );
+			} else {
+				clsDx();
+				dgfloorManager->generateFloor();
+				printfDx( "time = %d\n", GetNowCount() - generateStartTime );
+			}
 		}
 	}
 
