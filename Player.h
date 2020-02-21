@@ -12,5 +12,11 @@ private:
 public:
 	Player();
 	~Player();
-	void setPosition( int y, int x );
+
+	const int getX() const { return x; }
+	const int getY() const { return y; }
+
+	void setPosition( int x, int y );
+
+	void draw();
 };

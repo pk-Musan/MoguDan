@@ -2,9 +2,6 @@
 
 // createLayer() を使ってdataを初期化
 Layer2D::Layer2D( int width, int height ) : width(0), height(0), data(0) {
-	if ( width > 0 && height > 0 ) {
-		createLayer( width, height );
-	}
 }
 
 Layer2D::~Layer2D() {
@@ -22,7 +19,10 @@ const int& Layer2D::operator()( int y, int x ) const {
 	return data[y * width + x];
 }
 
-// dataをwidth * height分のint型配列として初期化
+/*
+	dataが確保している領域をdeleteしてから
+	dataをwidth * height分のint型配列として初期化
+*/
 void Layer2D::createLayer( int width, int height ) {
 	delete data;
 	data = 0;

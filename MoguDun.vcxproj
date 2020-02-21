@@ -152,8 +152,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DungeonDivision.cpp" />
-    <ClCompile Include="DungeonGenerator.cpp" />
-    <ClCompile Include="DungeonFloorManager.cpp" />
+    <ClCompile Include="DungeonLayer.cpp" />
+    <ClCompile Include="DungeonLayerManager.cpp" />
     <ClCompile Include="KeyBoard.cpp" />
     <ClCompile Include="Layer2D.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -161,8 +161,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DungeonDivision.h" />
-    <ClInclude Include="DungeonGenerator.h" />
-    <ClInclude Include="DungeonFloorManager.h" />
+    <ClInclude Include="DungeonLayer.h" />
+    <ClInclude Include="DungeonLayerManager.h" />
     <ClInclude Include="KeyBoard.h" />
     <ClInclude Include="Layer2D.h" />
     <ClInclude Include="Player.h" />

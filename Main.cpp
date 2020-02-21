@@ -1,5 +1,5 @@
 #include "DxLib.h"
-#include "DungeonFloorManager.h"
+#include "DungeonLayerManager.h"
 #include "KeyBoard.h"
 
 int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow ) {
@@ -8,7 +8,7 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	ChangeWindowMode( TRUE );
 
-	SetGraphMode( 960, 960, 32 );
+	SetGraphMode( 1120, 960, 32 );
 
 	if ( DxLib_Init() == -1 ) {
 		return -1;
@@ -18,9 +18,9 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	SetWaitVSyncFlag( FALSE );
 
 	loopStartTime = GetNowCount();
-	DungeonFloorManager* dgfloorManager = new DungeonFloorManager( 50, 50 );
+	DungeonLayerManager* dgLayerManager = new DungeonLayerManager( 55, 55 );
 	generateStartTime = GetNowCount();
-	dgfloorManager->generateFloor();
+	dgLayerManager->generateLayer();
 	printfDx( "time = %d\n", GetNowCount() - generateStartTime );
 
 	while ( ScreenFlip() == 0 && ProcessMessage() == 0 && ClearDrawScreen() == 0 && KeyBoard::updateKey() == 0 ) { // 画面更新 & メッセージ処理 & 画面消去
@@ -31,24 +31,24 @@ int WINAPI WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		//if ( KeyBoard::key[KEY_INPUT_Q] == 1 ) break;
 		if ( KeyBoard::key[KEY_INPUT_Q] == 1 ) {
 			clsDx();
-			delete dgfloorManager;
-			dgfloorManager = 0;
+			delete dgLayerManager;
+			dgLayerManager = 0;
 		}
 		if ( KeyBoard::key[KEY_INPUT_ESCAPE] == 1 ) {
-			delete dgfloorManager;
-			dgfloorManager = 0;
+			delete dgLayerManager;
+			dgLayerManager = 0;
 			break;
 		}
 		if ( KeyBoard::key[KEY_INPUT_SPACE] == 1 ) {
 			generateStartTime = GetNowCount();
-			if ( dgfloorManager == nullptr ) {
+			if ( dgLayerManager == nullptr ) {
 				clsDx();
-				dgfloorManager = new DungeonFloorManager( 50, 50 );
-				dgfloorManager->generateFloor();
+				dgLayerManager = new DungeonLayerManager( 55, 55 );
+				dgLayerManager->generateLayer();
 				printfDx( "time = %d\n", GetNowCount() - generateStartTime );
 			} else {
 				clsDx();
-				dgfloorManager->generateFloor();
+				dgLayerManager->generateLayer();
 				printfDx( "time = %d\n", GetNowCount() - generateStartTime );
 			}
 		}

@@ -11,7 +11,17 @@ Player::~Player() {
 
 }
 
-void Player::setPosition( int y, int x ) {
-	this->y = y;
+
+/*
+	プレイヤーの位置をセット
+*/
+void Player::setPosition( int x, int y ) {
 	this->x = x;
+	this->y = y;
 }
+
+
+/*
+
+*/
+void Player::draw() {}
