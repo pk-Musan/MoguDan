@@ -1,25 +1,13 @@
 #include "Player.h"
 
-Player::Player() : x( -1 ), y( -1 ), level( 1 ) {
-	hp = 15;
-	mp = 20;
-	attack = 5;
-	defense = 5;
+Player::Player( int x, int y, int maxHp, int maxMp, int strength, int defense ) : Actor( x, y, maxHp, maxMp, strength, defense ) {
+	level = 1;
+	exp = 0;
 }
 
 Player::~Player() {
 
 }
-
-
-/*
-	プレイヤーの位置をセット
-*/
-void Player::setPosition( int x, int y ) {
-	this->x = x;
-	this->y = y;
-}
-
 
 /*
 
