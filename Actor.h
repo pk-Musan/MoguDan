@@ -35,6 +35,15 @@ class Actor {
 		LEFT_DOWN
 	};
 
+	enum AnimationState {
+		DEFAULT, // 通常アニメーション
+		MOVE, // 移動アニメーション
+		ATTACK, // 攻撃アニメーション
+		ATTACKED, // 被攻撃アニメーション
+		TRAPPED, // 罠作動時アニメーション
+		DEAD // 死亡時アニメーション
+	};
+
 private:
 	int x; // キャラクタのx座標
 	int y; // キャラクタのy座標
@@ -42,11 +51,19 @@ private:
 	int maxMp; // キャラクタの最大MP
 	int hp; // キャラクタの現在のHP
 	int mp; // キャラクタの現在のMP
-	int strength; // キャラクタの攻撃力
+	int attack; // キャラクタの攻撃力
 	int defense; // キャラクタの防御力
+	int evasion; // キャラクタの回避率
+	int speed; // キャラクタの速さ（1なら1ターンに1回行動，2なら1ターンに2回行動）
+
+	State state;
+	Direction direction;
+	AnimationState animeState;
+
+	int animationCount;
 
 public:
-	Actor( int x, int y, int maxHp, int maxMp, int strength, int defense );
+	Actor( int x, int y, int maxHp, int maxMp, int strength, int defense, int evasion, int speed );
 	virtual ~Actor();
 
 	// ステータスのgetter
@@ -56,8 +73,12 @@ public:
 	const int getMaxMp() const { return maxMp; }
 	const int getHp() const { return hp; }
 	const int getMp() const { return mp; }
-	const int getStrength() const { return strength; }
+	const int getAttack() const { return attack; }
 	const int getDefense() const { return defense; }
+	const int getEvasion() const { return evasion; }
+	const int getSpeed() const { return speed; }
 
 	void setPosition( int x, int y );
+
+	void draw();
 };

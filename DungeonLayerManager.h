@@ -22,12 +22,12 @@ public:
 	DungeonLayerManager( int width, int height );
 	~DungeonLayerManager();
 
-	void generateLayer();
-	void initPlayerInfo();
-	void setPlayerPosition();
-	void setEnemyPosition( /* Enemy& enemy */ );
+	void generateLayer(); // ダンジョン（プレイヤー，階段，罠，アイテム含む）を生成する
+	void initPlayerInfo(); // 初期座標をランダムに決定してプレイヤーを初期化する
+	void setPlayerPosition(); // 階層変更時にプレイヤーの位置座標をランダムに決定する
+	void setEnemyPosition( /* Enemy& enemy */ ); // 敵の位置座標をランダムに決定する
 
-	//void ();
+	void update();
 
 	void draw();
 };
