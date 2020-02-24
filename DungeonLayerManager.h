@@ -1,6 +1,7 @@
 #pragma once
 #include "DungeonLayer.h"
 #include "Player.h"
+#include "KeyBoard.h"
 
 /*
 	DungeonGeneratorクラスによって自動生成されたフロアとプレイヤー，アイテム，敵などのインスタンスを管理する
@@ -28,6 +29,10 @@ public:
 	void setEnemyPosition( /* Enemy& enemy */ ); // 敵の位置座標をランダムに決定する
 
 	void update();
+	void inputKey();
+	void move();
+	void attackByPlayer();
+	void attackByEnemy();
 
 	void draw();
 };

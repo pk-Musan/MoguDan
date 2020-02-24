@@ -14,6 +14,11 @@ void Actor::setPosition( int x, int y ) {
 	this->y = y;
 }
 
+void Actor::move( int dx, int dy ) {
+	x = x + dx;
+	y = y + dy;
+}
+
 void Actor::draw() {
 
 }

@@ -4,6 +4,7 @@
 	プレイヤーや敵などの基礎クラス
 */
 class Actor {
+public:
 	// キャラクタの状態
 	enum State {
 		// 入力待ち
@@ -78,7 +79,17 @@ public:
 	const int getEvasion() const { return evasion; }
 	const int getSpeed() const { return speed; }
 
+	const State getState() const { return state; }
+	const Direction getDirection() const { return direction; }
+	const AnimationState getAnimeState() const { return animeState; }
+
 	void setPosition( int x, int y );
+	
+	void setState( State state );
+	void setDirection( Direction direction );
+	void setAnimeState( AnimationState animeState );
+
+	void move( int dx, int dy );
 
 	void draw();
 };

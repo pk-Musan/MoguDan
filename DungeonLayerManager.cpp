@@ -72,8 +72,19 @@ void DungeonLayerManager::update() {
 	// すべてのキャラクタがTURN_ENDであればプレイヤーをキー入力待ちに変更
 
 	// プレイヤーの状態がキー入力待ちであればキー入力を受ける
+	inputKey();
+
 	/*
-		if ( KeyeBoard.key[KEYINPUT_SPACE] == 1 ) player->state = ATTACK_BEGIN;
+		// 移動系
+		if ( KeyBoard.key[KEYINPUT_LEFT] == 1 ) {
+			player->state = MOVE_BEGIN;
+			player->direction = Player::LEFT;
+		} else if () {
+			
+		}
+		// 攻撃系
+		else if ( KeyeBoard.key[KEYINPUT_SPACE] == 1 ) player->state = ATTACK_BEGIN;
+		// その他諸々
 		else if ()
 	*/
 
@@ -140,6 +151,92 @@ void DungeonLayerManager::update() {
 	*/
 }
 
+
+/*
+	playerのstateがキー入力待ちの場合，キー入力を受けてplayerのstateを変更
+*/
+void DungeonLayerManager::inputKey() {
+	if ( player->getState() != Player::State::KEY_INPUT ) return;
+
+	// メニュー画面を開いてないとき
+	// if (  )
+
+	// 方向転換，移動
+	if ( KeyBoard::key[KEY_INPUT_LEFT] >= 1 && KeyBoard::key[KEY_INPUT_UP] >= 1 ) {
+		player->setDirection( Player::Direction::LEFT_UP );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	} else if ( KeyBoard::key[KEY_INPUT_RIGHT] >= 1 && KeyBoard::key[KEY_INPUT_UP] >= 1 ) {
+		player->setDirection( Player::Direction::RIGHT_UP );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	} else if ( KeyBoard::key[KEY_INPUT_RIGHT] >= 1 && KeyBoard::key[KEY_INPUT_DOWN] >= 1 ) {
+		player->setDirection( Player::Direction::RIGHT_DOWN );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	} else if ( KeyBoard::key[KEY_INPUT_LEFT] >= 1 && KeyBoard::key[KEY_INPUT_DOWN] >= 1 ) {
+		player->setDirection( Player::Direction::LEFT_DOWN );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	} 
+	else if ( KeyBoard::key[KEY_INPUT_LEFT] >= 1 ) {
+		player->setDirection( Player::Direction::LEFT );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	} else if ( KeyBoard::key[KEY_INPUT_UP] >= 1 ) {
+		player->setDirection( Player::Direction::UP );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	} else if ( KeyBoard::key[KEY_INPUT_RIGHT] >= 1 ) {
+		player->setDirection( Player::Direction::RIGHT );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	} else if ( KeyBoard::key[KEY_INPUT_DOWN] >= 1 ) {
+		player->setDirection( Player::Direction::DOWN );
+		if ( KeyBoard::key[KEY_INPUT_LSHIFT] == 0 ) player->setState( Player::State::MOVE_BEGIN );
+		return;
+	}
+
+	/*
+	if ( KeyBoard::key[KEY_INPUT_SPACE] == 1 ) {
+		player->setState( Actor::State::ATTACK_BEGIN );
+	}
+	*/
+}
+
+
+
+void DungeonLayerManager::move() {
+	if ( player->getState() == Player::State::MOVE_BEGIN ) {
+		// 移動可能か判定
+		int dx, dy;
+		int dir = player->getDirection();
+
+		if ( dir == Player::LEFT || dir == Player::LEFT_UP || dir == Player::LEFT_DOWN ) dx = -1;
+		else if ( dir == Player::UP || dir == Player::DOWN ) dx = 0;
+		else if ( dir == Player::RIGHT_UP || dir == Player::RIGHT || dir == Player::RIGHT_DOWN ) dx = 1;
+		
+		if ( dir == Player::LEFT_UP || dir == Player::UP || dir == Player::RIGHT_UP ) dy = -1;
+		else if ( dir == Player::LEFT || dir == Player::RIGHT ) dy = 0;
+		else if ( dir == Player::RIGHT_DOWN || dir == Player::DOWN || dir == Player::LEFT_DOWN ) dy = 1;
+
+		if ( dungeonLayer->isFloor( player->getX() + dx, player->getY() + dy ) ) {
+			player->move( dx, dy );
+			player->setState( Player::State::MOVE );
+		} else player->setState( Player::State::KEY_INPUT );
+	}
+	
+	/*
+	if ( player->getState() == Player::State::MOVE || player->getState() == Player::State::ATTACK_END || ~  ) return;
+	for ( Enemy* enemy : enemies ) {
+		if ( enemy->getState() == Enemy::State::MOVE_BEGIN ) {
+			// playerとダンジョンの参照を渡して敵ごとに移動を決定する
+			enemy->move( player, dungeonLayer );
+
+		}
+	}
+	*/
+}
 
 /*
 	マップ，アイテム，プレイヤー，敵の描画
