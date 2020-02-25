@@ -74,64 +74,16 @@ void DungeonLayerManager::update() {
 	// プレイヤーの状態がキー入力待ちであればキー入力を受ける
 	inputKey();
 
-	/*
-		// 移動系
-		if ( KeyBoard.key[KEYINPUT_LEFT] == 1 ) {
-			player->state = MOVE_BEGIN;
-			player->direction = Player::LEFT;
-		} else if () {
-			
-		}
-		// 攻撃系
-		else if ( KeyeBoard.key[KEYINPUT_SPACE] == 1 ) player->state = ATTACK_BEGIN;
-		// その他諸々
-		else if ()
-	*/
+	move();
+
+	// プレイヤーがMOVE_ENDの場合，敵の攻撃より先に足元の階段，アイテム，罠などのチェックを行う
+	// checkFloor() で以下の3つを行う
+	// checkStairs();
+	// checkFootingItem();
+	// checkTrap();
 
 
-	// プレイヤーがMOVE＿BEGIN
-	// draw関数内で移動分の描画が終わったら状態をMOVE_ENDに移行する
-	/*
-		移動可能か判定
-
-		player->move() // 座標を更新，どの方向から来たか記憶させておく
-
-		プレイヤーの移動先に合わせて各敵の行動を決定
-
-		// 敵の移動も実行
-		for ( Enemy* enemy : enemies ) {
-			if ( enemy->state == enemy->MOVE_BEGIN ) {
-				enemy->state = enemy->MOVE;
-				enemy->move()
-			}
-		}
-	*/
-
-
-	// プレイヤーがATTACK_END && 攻撃中の敵がいない
-	// draw関数内で移動分の描画が終わったら状態をMOVE_ENDに移行する
-	/*
-		// 敵の移動も実行
-		for ( Enemy* enemy : enemies ) {
-			if ( enemy->state == enemy->MOVE_BEGIN ) {
-				enemy->state = enemy->MOVE;
-				enemy->move()
-			}
-		}
-	*/
-
-
-	// draw関数内で攻撃用のアニメーションが終わったらプレイヤーの状態をATTACKに移行
-	// プレイヤーがATTACKの場合
-	/*
-		// プレイヤーの位置マス先に敵または罠がないかチェック
-		// 敵がいる場合，player->attack( enemy );
-		// 攻撃対象enemyの体力チェック
-		// 体力が0以下の場合はenemyの状態をDEAD＿BEGINに変更
-		// 罠がある場合は罠の状態をvisibleに変更
-		// プレイヤーの状態をATTACK＿ENDに移行
-	*/
-
+	attackByPlayer();
 
 	// プレイヤーがMOVE_ENDかつ移動中(MOVE)の敵がいない or プレイヤーがATTACK_END
 	// プレイヤーに対して攻撃中(ATTACK)の敵がいない，かつ死亡アニメーション中の敵がいない
@@ -198,7 +150,10 @@ void DungeonLayerManager::inputKey() {
 	}
 
 	/*
-	if ( KeyBoard::key[KEY_INPUT_SPACE] == 1 ) {
+	// Enter：武器での攻撃
+	// space：メニューを開く
+	// c：セットしたアイテムを使う？
+	if ( KeyBoard::key[KEY_INPUT_RETURN] == 1 ) {
 		player->setState( Actor::State::ATTACK_BEGIN );
 	}
 	*/
@@ -227,15 +182,75 @@ void DungeonLayerManager::move() {
 	}
 	
 	/*
-	if ( player->getState() == Player::State::MOVE || player->getState() == Player::State::ATTACK_END || ~  ) return;
+	// プレイヤーがMOVE || ( プレイヤーがATTACK_END && ATTACKの敵がいない )
+	if ( !canEnemyMove() ) return;
 	for ( Enemy* enemy : enemies ) {
 		if ( enemy->getState() == Enemy::State::MOVE_BEGIN ) {
 			// playerとダンジョンの参照を渡して敵ごとに移動を決定する
+			// その場から動けない場合は状態をMOVE_ENDに変更
 			enemy->move( player, dungeonLayer );
-
 		}
 	}
 	*/
+}
+
+
+/*
+	敵が移動を行ってよいか判定する
+*/
+bool DungeonLayerManager::canMoveEnemy() {
+	if ( player->getState() == Player::State::MOVE ) return true;
+	if ( player->getState() == Player::State::ATTACK_END ) {
+		/*
+		for ( Enemy* enemy : enemies ) {
+			if ( enemy->getState() == Enemy::State::ATTACK || enemy->getState() == Enemy::State::ATTACK_BEGIN ) {
+				return false;
+			}
+		}
+		*/
+		return true;
+	}
+
+	return false;
+}
+
+
+
+void DungeonLayerManager::attackByPlayer() {
+	// draw関数内で攻撃用のアニメーションが終わったらプレイヤーの状態をATTACKに移行
+	// プレイヤーがATTACKの場合
+	/*
+		// プレイヤーの1マス先に敵または罠がないかチェック
+		// 敵がいる場合，player->attack( enemy );
+		// 攻撃対象enemyの体力チェック
+		// 体力が0以下の場合はenemyの状態をDEAD＿BEGINに変更
+		// 罠がある場合は罠の状態をvisibleに変更
+		// プレイヤーの状態をATTACK＿ENDに移行
+	*/
+	if ( player->getState() != Player::State::ATTACK ) return;
+
+	/*
+	// プレイヤーの武器の攻撃範囲をチェックする
+	// 斜めに攻撃するときは隣接しているブロックがないかチェックする
+	// 範囲内に存在する敵に攻撃を行う
+	// メッセージウィンドウに対象名とダメージを送る
+	for ( Enemy* enemy : enemies ) {
+		if ( enemy->getX() ==  )
+	}
+	*/
+
+	/*
+		敵がいなければ範囲内の罠のチェックを行う
+	*/
+	player->setState( Player::State::ATTACK_END );
+}
+
+
+
+void DungeonLayerManager::attackByEnemy() {
+	if ( !( player->getState() == Player::State::ATTACK_END || player->getState() == Player::State::MOVE_END ) ) return;
+
+	//for (  )
 }
 
 /*

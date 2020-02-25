@@ -9,6 +9,13 @@
 class DungeonLayerManager {
 
 public:
+	enum State {
+		KEY_INPUT,
+		MENU,
+		MOVE,
+		ATTACK,
+		SHORT_CUT,
+	};
 	const static int SPAWN_RANGE = 8;
 
 private:
@@ -18,6 +25,8 @@ private:
 	// item‚Ímapî•ñ‚ÆÆ‚ç‚µ‡‚í‚¹‚½‚¢‚Ì‚Åmap‚Æ“¯‚¶width * height ‚ÌˆêŸŒ³”z—ñ‚Ì•û‚ª‚æ‚³‚»‚¤
 	// std::vector<Item*> items;
 	// std::vector<Enemy*> enemies;
+
+
 
 public:
 	DungeonLayerManager( int width, int height );
@@ -31,6 +40,7 @@ public:
 	void update();
 	void inputKey();
 	void move();
+	bool canMoveEnemy();
 	void attackByPlayer();
 	void attackByEnemy();
 
